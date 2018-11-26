@@ -1,0 +1,221 @@
+var CategoryprocessorGP = Class.create();
+CategoryprocessorGP.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+	
+	catsol:function()
+	{
+		var com, comn;
+		var caller = this.getParameter('sysparm_caller');
+		var role=gs.getUser().hasRole('itil');
+		gs.log("estoy trayendo esto en el caller: "+caller);
+		var gr = new GlideRecord('sys_user');
+		gr.addQuery('sys_id',caller);
+		gr.query();
+		if(gr.next())
+			{
+				com=gr.company;
+				comn=gr.company.getDisplayValue();
+			}
+		gs.log('la empresa es: '+com+" con nombre "+comn);
+		var answer = com+"|"+role;
+		return answer;
+	},
+	
+	catsolsap:function()
+	{
+		var cll = this.getParameter('sysparm_caller');
+		var array = [];
+		var role=gs.hasRole("itil");
+		var bc = new GlideRecord('sys_user');
+		bc.addQuery('sys_id',cll);
+		bc.query();
+		if (bc.next()) {
+			company=bc.company; }
+		var object={};
+		object.u_category_1 = "AUTORIZACIONES SAP";
+		object.u_value_1 = "171";
+		array.push(object);
+		var json = new JSON();
+		var data = json.encode(array);
+		return data;
+	},
+
+	
+	catsolgen:function()
+	{
+		var cat = this.getParameter('sysparm_cat');
+		var els = this.getParameter('sysparm_els');
+		var cll = this.getParameter('sysparm_caller');
+		var bSS, company;
+		var array = [];
+	//	var grp   = gs.getUser().isMemberOf('Empleados');
+		var role  = gs.hasRole("itil");
+		bSS = cat;
+		var bc = new GlideRecord('sys_user');
+		bc.addQuery('sys_id',cll);
+		bc.query();
+		if (bc.next()) {
+			company = bc.company; }
+		var gr1 = new GlideRecord('sys_choice');
+		gr1.orderBy('label');
+		gr1.addQuery('name', 'u_solicitudes');
+		gr1.addQuery('element', els);
+		gr1.addQuery('dependent_value',bSS);
+		gr1.addQuery('inactive',false);
+		var cmp = gr1.addNullQuery('u_empresa'); 
+		if (company != "undefined") {
+			cmp.addOrCondition('u_empresa',company); }
+		if (role != true) {
+			gr1.addQuery('u_role',false); }
+		gr1.query();
+		while(gr1.next())
+		{
+			var object = {};
+			object.u_category_1 = gr1.getDisplayValue('label');
+			object.u_value_1 = gr1.getDisplayValue('value');
+			array.push(object);
+		}
+		var json = new JSON();
+		var data = json.encode(array);
+		return data;
+	},
+	
+
+	catsolremov:function()
+	{
+		var cat = this.getParameter('sysparm_cat');
+		var els = this.getParameter('sysparm_els');
+		var cll = this.getParameter('sysparm_caller');
+		var company;
+		var array = [];
+		var role  = gs.hasRole("itil");
+		var bc = new GlideRecord('sys_user');
+		bc.addQuery('sys_id',cll);
+		bc.query();
+		if (bc.next()) {
+			company = bc.company; }
+		var gr1 = new GlideRecord('sys_choice');
+		gr1.orderBy('label');
+		gr1.addQuery('name', 'u_solicitudes');
+		gr1.addQuery('element', els);
+		gr1.addQuery('dependent_value', cat);
+		gr1.addQuery('inactive', false);
+		gr1.addQuery('u_empresa','!=','');
+		gr1.addQuery('u_empresa','!=',company);
+		gr1.query();
+		while(gr1.next())
+		{
+			var object={};
+			object.u_category_1 = gr1.getDisplayValue('label');
+			object.u_value_1 = gr1.getDisplayValue('value');
+			array.push(object);
+		}
+		var json = new JSON();
+		var data = json.encode(array);
+		return data;
+	},
+	
+	
+	catinc:function()
+	{
+		var com, comn;
+		var caller = this.getParameter('sysparm_caller');
+		var role=gs.getUser().hasRole('itil');
+		gs.log("estoy trayendo esto en el caller: "+caller);
+		var gr = new GlideRecord('sys_user');
+		gr.addQuery('sys_id',caller);
+		gr.query();
+		if (gr.next())
+		{
+			com=gr.company;
+			comn=gr.company.getDisplayValue();
+		}
+		gs.log('la empresa es: '+com+" con nombre "+comn);
+		var answer = com+"|"+role;
+		return answer;
+	},
+	
+	
+	catincgen:function()
+	{
+		var cat = this.getParameter('sysparm_cat');
+		var els = this.getParameter('sysparm_els');
+		var cll = this.getParameter('sysparm_caller');
+		var bSS, company;
+		var array = [];
+	//	var grp   = gs.getUser().isMemberOf('Empleados');
+		var role  = gs.hasRole("itil");
+		if (els == 'category') {
+			var bsnss = new GlideRecord('cmdb_ci_service');
+			bsnss.addQuery('sys_id', cat);
+			bsnss.query();
+			if (bsnss.next()) {
+				bSS = bsnss.name; }
+		}
+		else { 
+			bSS = cat; }
+		var bc = new GlideRecord('sys_user');
+		bc.addQuery('sys_id',cll);
+		bc.query();
+		if (bc.next()) {
+			company = bc.company; }
+		var gr1 = new GlideRecord('sys_choice');
+		gr1.orderBy('label');
+		gr1.addQuery('name', 'incident');
+		gr1.addQuery('element', els);
+		gr1.addQuery('dependent_value',bSS);
+		gr1.addQuery('inactive',false);
+		var cmp = gr1.addNullQuery('u_empresa'); // addQuery('u_empresa','');
+		if (company != "undefined") {
+			cmp.addOrCondition('u_empresa',company); }
+		if (role != true) {
+			gr1.addQuery('u_role',false); }
+		gr1.query();
+		while(gr1.next())
+		{
+			var object = {};
+			object.u_category_1 = gr1.getDisplayValue('label');
+			object.u_value_1 = gr1.getDisplayValue('value');
+			array.push(object);
+		}
+		var json = new JSON();
+		var data = json.encode(array);
+		return data;
+	},
+
+	
+	catincremov:function()
+	{
+		var cat = this.getParameter('sysparm_cat');
+		var els = this.getParameter('sysparm_els');
+		var cll = this.getParameter('sysparm_caller');
+		var company;
+		var array = [];
+		var role  = gs.hasRole("itil");
+		var bc = new GlideRecord('sys_user');
+		bc.addQuery('sys_id',cll);
+		bc.query();
+		if (bc.next()) {
+			company = bc.company; }
+		var gr1 = new GlideRecord('sys_choice');
+		gr1.orderBy('label');
+		gr1.addQuery('name', 'incident');
+		gr1.addQuery('element', els);
+		gr1.addQuery('dependent_value', cat);
+		gr1.addQuery('inactive', false);
+		gr1.addQuery('u_empresa','!=','');
+		gr1.addQuery('u_empresa','!=',company);
+		gr1.query();
+		while(gr1.next())
+		{
+			var object={};
+			object.u_category_1 = gr1.getDisplayValue('label');
+			object.u_value_1 = gr1.getDisplayValue('value');
+			array.push(object);
+		}
+		var json = new JSON();
+		var data = json.encode(array);
+		return data;
+	},
+
+    type: 'CategoryprocessorGP'
+});
